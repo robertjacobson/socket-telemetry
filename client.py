@@ -6,7 +6,7 @@ import json
 
 # Server info
 SERVER = os.environ.get("SERVER", '127.0.0.1')
-PORT = os.environ.get("PORT", 8888)
+PORT = int(os.environ.get("PORT", 8888))
 host = socket.gethostname()
 
 # Variables
