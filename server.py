@@ -2,9 +2,9 @@ import influxdb_client, os, time, socket, threading, json
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
 
-INFLUX_TOKEN = os.environ.get("INFLUXDB_TOKEN", "GET_TOKEN") 
+INFLUX_TOKEN = os.environ.get("INFLUX_TOKEN") 
 INFLUX_HOST = os.environ.get("INFLUX_HOST", "http://localhost:8086")
-PORT = os.environ.get("PORT", 8888)
+PORT = int(os.environ.get("PORT", 8888))
 
 influx_c = influxdb_client.InfluxDBClient(url=INFLUX_HOST, token=INFLUX_TOKEN, org="home")
 influx_w = influx_c.write_api(write_options=SYNCHRONOUS)

@@ -1,0 +1,11 @@
+version: '3.8'
+services:
+  socket-server:
+    container_name: socket-receiver
+    restart: unless-stopped
+    image: socket-telemetry:latest
+    network_mode: host
+    privileged: true
+    env_file:
+      - .env
+      - .env.override
