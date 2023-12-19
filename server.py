@@ -45,8 +45,7 @@ def handle_client(client_socket):
             datapoints.clear
 
         except ConnectionResetError:
-            # Report the result to Telegraph
-            # telegraf.metric('connection_reset', value=1, tags={'client_ip': client_socket.getpeername()[0], 'timestamp': current_time})
+            # Report the result to Influx
             influx_w.write(bucket=influx_bucket, record=Point.tag("host", fclient).field("connection_reset_by_peer", 1))
             print(f"Connection reset by {fclient}:{client_socket.getpeername()[1]}")
             break
@@ -57,7 +56,7 @@ def handle_client(client_socket):
 # Create a socket server
 def start_server():
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind(('0.0.0.0', PORT))  # Change the IP and port as needed
+    server.bind(('0.0.0.0', PORT))  
     server.listen(5)
     print("Server listening on port 8888...")
 

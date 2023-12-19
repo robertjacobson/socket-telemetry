@@ -81,9 +81,6 @@ def send_heartbeat():
             pass
         except Exception as e:
             print(f"Error: {e}")
-            # if client_socket:
-            #     client_socket.close()
-            #     client_socket = None
 
         # Sleep for 1 second before sending the next heartbeat or retrying
         time.sleep(1)
