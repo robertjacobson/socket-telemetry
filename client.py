@@ -19,15 +19,21 @@ message_count = 0
 client_socket = None
 server_unavailable_count = 0
 
+def dprint(*args):
+    print("[main] "+" ".join(map(str,args)))
+
 def establish_connection():
     global stop_flag, connection_up_flag, client_socket, connection_count, connection_reset_count, server_unavailable_count
+
+    def dprint(*args):
+        print("[establish_connection] "+" ".join(map(str,args)))
 
     try:
         while stop_flag == False:
             try:
                 # send_heartbeat thread had a problem, reestablish connection:
                 if connection_up_flag == False:
-                    print(">>> client_socket = None")
+                    dprint("client_socket = None")
                     client_socket = None
 
                 # The connection is good, check again in one second
@@ -36,42 +42,45 @@ def establish_connection():
 
                 # Create a socket and connect to the server if not already connected
                 if client_socket is None:
-                    print(f"Attempting to establish socket connection to {SERVER}:{PORT}")
+                    dprint(f"Attempting to establish socket connection to {SERVER}:{PORT}")
                     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     client_socket.connect((SERVER, PORT))
                     connection_count += 1
 
             except TimeoutError:
-                print("Socket connection timed out")
+                dprint("Socket connection timed out")
                 client_socket = None
                 time.sleep(1)
             except ConnectionResetError:
-                print(f"Connection reset ({connection_reset_count}). Restablishing connection...")
+                dprint(f"Connection reset ({connection_reset_count}). Restablishing connection...")
                 connection_reset_count += 1
                 client_socket = None
                 time.sleep(1)  # Wait for 1 seconds before attempting to reconnect
             except ConnectionRefusedError:
-                print(f"Connection refused by server, retrying in 1s. (Attempt {server_unavailable_count})...")
+                dprint(f"Connection refused by server, retrying in 1s. (Attempt {server_unavailable_count})...")
                 server_unavailable_count += 1
                 client_socket = None
                 time.sleep(1)  # Wait for 1 seconds before attempting to reconnect
 
-            print(">>> connection_up_flag = True")
+            dprint(">>> connection_up_flag = True")
             connection_up_flag = True
 
     except KeyboardInterrupt:
-        print("Client interrupted.")
+        dprint("Client interrupted.")
         stop_flag = True
         time.sleep(0) # Yield to allow for a graceful disconnect message
 
 def send_heartbeat():
     global stop_flag, connection_up_flag, message_count, client_socket, connection_reset_count, server_unavailable_count
 
+    def dprint(*args):
+        print("[send_heartbeat] "+" ".join(map(str,args)))
+
     try:
         while stop_flag == False:
             try:
                 if connection_up_flag == False:
-                    print("waiting for server connection...")
+                    dprint("waiting for server connection...")
                     time.sleep(1)
                     continue
 
@@ -88,33 +97,33 @@ def send_heartbeat():
                 )
                 j = json.dumps(heartbeat_message)
                 client_socket.send(j.encode())
-                print(f"Sent: {j}")
+                dprint(f"Sent: {j}")
 
                 #Message successfully sent, reset failure counters
                 connection_reset_count = 0
                 server_unavailable_count = 0
 
             except BrokenPipeError:
-                print("||| connection_up_flag = False")
+                dprint("connection_up_flag = False")
                 connection_up_flag = False
-                print("broken pipe error")
+                dprint("broken pipe error")
             except Exception as e:
-                print("||| connection_up_flag = False")
+                dprint("connection_up_flag = False")
                 connection_up_flag = False
-                print(f"Error: {e}")
+                dprint(f"Error: {e}")
 
             # Sleep for 1 second before sending the next heartbeat or retrying
             time.sleep(1)
 
         else:
-            print("raising keyboard interrupt")
+            dprint("raising keyboard interrupt")
             raise KeyboardInterrupt
 
     except KeyboardInterrupt:
         disconnect = {"disconnect":"true"}
         j = json.dumps(disconnect)
         client_socket.send(j.encode())
-        print("Client interrupted, sending disconnect & exit.")
+        dprint("Client interrupted, sending disconnect & exit.")
         stop_flag = True
 
 # Start a thread to send heartbeats
@@ -128,7 +137,7 @@ try:
     heartbeat_thread.join()  # Wait for the heartbeat thread to finish
 
 except KeyboardInterrupt:
-    print("Client interrupted.")
+    dprint("Client interrupted.")
     stop_flag = True
 
 finally:
