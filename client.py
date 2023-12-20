@@ -1,5 +1,6 @@
 import os
 import socket
+socket.setdefaulttimeout(1.0)
 import time
 import threading
 import json
