@@ -47,6 +47,9 @@ def establish_connection():
                     client_socket.connect((SERVER, PORT))
                     connection_count += 1
 
+                    dprint("connection_up_flag = True")
+                    connection_up_flag = True
+
             except TimeoutError:
                 dprint("Socket connection timed out")
                 client_socket = None
@@ -61,9 +64,6 @@ def establish_connection():
                 server_unavailable_count += 1
                 client_socket = None
                 time.sleep(1)  # Wait for 1 seconds before attempting to reconnect
-
-            dprint(">>> connection_up_flag = True")
-            connection_up_flag = True
 
     except KeyboardInterrupt:
         dprint("Client interrupted.")
