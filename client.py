@@ -29,6 +29,9 @@ def establish_connection():
                     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     client_socket.connect((SERVER, PORT))
                     connection_count += 1
+                else:
+                    # Connection is good, check again in one second
+                    time.sleep(1)
 
             except TimeoutError:
                 print("Socket connection timed out")
