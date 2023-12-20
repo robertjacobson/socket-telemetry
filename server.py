@@ -25,7 +25,7 @@ def handle_client(client_socket):
                 # Receive data from the client (heartbeat)
                 data = client_socket.recv(1024)
                 if not data:
-                    datapoints.append(Point("abrupt_exit").tag("host", fclient).field("no_data", 1))
+                    influx_w.write(bucket=influx_bucket, record=Point("abrupt_exit").tag("host", fclient))
                     break
 
                 # Record the timestamp when the message is received
@@ -35,7 +35,7 @@ def handle_client(client_socket):
                     j = json.loads(msg)
 
                     if "disconnect" in j:
-                        datapoints.append(Point("graceful_disconnect").tag("host",fclient).tag("osname", j['host']))
+                        influx_w.write(bucket=influx_bucket, record=Point("graceful_disconnect").tag("host", fclient))
                         print(f"{fclient} gracefully disconnected.")
                     else:
                         datapoints.append(Point("heartbeat").tag("host",fclient).tag("osname", j['host']).field("count", j['heartbeat_id']))
@@ -44,17 +44,17 @@ def handle_client(client_socket):
                         datapoints.append(Point("connection_reset").tag("host",fclient).tag("osname", j['host']).field("count", j['connection_resets']))
                         print(f"Received message from {fclient}:{fclient} at {current_time}: {data.decode()}")
 
+                        influx_w.write(bucket=influx_bucket, record=datapoints)
+                        datapoints.clear()
+
                 except KeyboardInterrupt:
                     raise
                 except Exception as e:
                     print(f"Error: {e}")
 
-                influx_w.write(bucket=influx_bucket, record=datapoints)
-                datapoints.clear
-
             except ConnectionResetError:
                 # Report the result to Influx
-                influx_w.write(bucket=influx_bucket, record=Point.tag("host", fclient).field("connection_reset_by_peer", 1))
+                influx_w.write(bucket=influx_bucket, record=Point("connection_reset_by_peer").tag("host", fclient))
                 print(f"Connection reset by {fclient}:{client_socket.getpeername()[1]}")
                 break
 
@@ -79,8 +79,7 @@ def start_server():
             client_socket, addr = server.accept()
             fclient = addr[0]
             print(f"Accepted connection from {fclient}:{addr[1]}... fclient-{fclient}")
-            rec = Point("connection_accepted").tag("host",fclient)
-            influx_w.write(bucket=influx_bucket, record=rec)
+            influx_w.write(bucket=influx_bucket, record=Point("connection_accepted").tag("host", fclient))
 
             # Start a new thread to handle the client connection
             client_handler = threading.Thread(target=handle_client, args=(client_socket,))
