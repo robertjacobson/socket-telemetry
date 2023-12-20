@@ -51,6 +51,7 @@ def handle_client(client_socket):
                     raise
                 except Exception as e:
                     print(f"Error: {e}")
+                    break
 
             except ConnectionResetError:
                 # Report the result to Influx
@@ -72,18 +73,27 @@ def start_server():
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind(('0.0.0.0', PORT))
     server.listen(5)
+    server.settimeout(1)
     print("Server listening on port 8888...")
 
     try:
         while stop_flag == False:
-            client_socket, addr = server.accept()
-            fclient = addr[0]
-            print(f"Accepted connection from {fclient}:{addr[1]}... fclient-{fclient}")
-            influx_w.write(bucket=influx_bucket, record=Point("connection_accepted").tag("host", fclient))
+            try:
+                client_socket, addr = server.accept()
+                fclient = addr[0]
+                print(f"Accepted connection from {fclient}:{addr[1]}... fclient-{fclient}")
+                influx_w.write(bucket=influx_bucket, record=Point("connection_accepted").tag("host", fclient))
 
-            # Start a new thread to handle the client connection
-            client_handler = threading.Thread(target=handle_client, args=(client_socket,))
-            client_handler.start()
+                # Start a new thread to handle the client connection
+                client_handler = threading.Thread(target=handle_client, args=(client_socket,))
+                client_handler.start()
+            except socket.timeout:
+                pass
+            except KeyboardInterrupt:
+                raise
+            except Exception as e:
+                print(f"Error: {e}")
+                break
 
     except KeyboardInterrupt:
         print("Server thread interrupted.")
