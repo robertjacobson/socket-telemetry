@@ -2,7 +2,7 @@ import influxdb_client, os, time, socket, threading, json
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
 
-INFLUX_TOKEN = os.environ.get("INFLUX_TOKEN") 
+INFLUX_TOKEN = os.environ.get("INFLUX_TOKEN")
 INFLUX_HOST = os.environ.get("INFLUX_HOST", "http://localhost:8086")
 PORT = int(os.environ.get("PORT", 8888))
 
@@ -70,7 +70,7 @@ def start_server():
     global stop_flag
 
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind(('0.0.0.0', PORT))  
+    server.bind(('0.0.0.0', PORT))
     server.listen(5)
     print("Server listening on port 8888...")
 
